@@ -1,6 +1,6 @@
 {
-  "name": "weblabnl/MoneyBird",
-  "version": "1.0",
+  "name": "weblabnl/moneybird",
+  "version": "1.0.1",
   "require": {
     "weblabnl/restclient": "~1.0"
   },

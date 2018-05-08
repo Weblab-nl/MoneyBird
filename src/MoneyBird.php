@@ -10,8 +10,6 @@ use Weblab\RESTClient\RESTClient;
  * Class MoneyBird - RESTClient implementation of the MoneyBird API
  * @author Weblab.nl - Eelco Verbeek
  *
- * This class is does api calls for the WebLab application: https://moneybird.com/user/applications/216125731388786642
- *
  * The access token should never expire but if need arises, follow the following steps to generate one:
  *
  * First call MoneyBird::generateRequestTokenURL(string[] scopes);
@@ -21,8 +19,8 @@ use Weblab\RESTClient\RESTClient;
  * They will get a screen where they can give access after logging in. After giving access they will see a request token.
  *
  * With this request token you can get an access token by calling MoneyBird::generateAccessToken(string requestToken);
- * This will output the access en refresh tokens. Add those to config.services.moneybird together with the
- * administration_id and you're good to go.
+ * This will output the access en refresh tokens. Store these somewhere in your .env or config files and use them to
+ * setup this class.
  *
  */
 class MoneyBird extends RESTClient {
