@@ -4,8 +4,8 @@ namespace Weblab\MoneyBird;
 
 use Prophecy\Argument;
 use Weblab\MoneyBird\Exceptions\TooManyRequestsException;
-use Weblab\RESTClient\Tests\TestCase;
 use Weblab\CURL\Result;
+use Weblab\MoneyBird\Tests\TestCase;
 use Weblab\RESTClient\Adapters\AdapterInterface;
 
 /**
