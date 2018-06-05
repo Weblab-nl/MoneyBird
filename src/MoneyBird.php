@@ -85,7 +85,7 @@ class MoneyBird extends RESTClient {
      * @param   string|null $refreshToken       RefreshToken for the passed accessToken
      * @param   string      $authRedirectURI    URI where a user will be redirected to when giving access. (default value outputs into browser)
      */
-    public static function setup(string $clientID, string $clientSecret, integer $administrationID, string $accessToken = null, string $refreshToken = null, string $authRedirectURI = 'urn:ietf:wg:oauth:2.0:oob') {
+    public static function setup(string $clientID, string $clientSecret, int $administrationID, string $accessToken = null, string $refreshToken = null, string $authRedirectURI = 'urn:ietf:wg:oauth:2.0:oob') {
         self::$clientID         = $clientID;
         self::$clientSecret     = $clientSecret;
         self::$administrationID = $administrationID;
