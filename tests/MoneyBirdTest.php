@@ -37,7 +37,7 @@ class MoneyBirdTest extends TestCase {
             ->andReturns('config');
 
         // initiate a new Moneybird object and set its adapter
-        $moneyBird = new MoneyBird();
+        $moneyBird = new MoneyBird('1a2b3c', 'this is a very secret secret',123456);
         $moneyBird->setAdapter($adapter->reveal());
 
         // set the expectation of an exception and test it

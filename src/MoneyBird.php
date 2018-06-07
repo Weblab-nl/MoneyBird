@@ -12,53 +12,53 @@ use Weblab\RESTClient\RESTClient;
  *
  * The access token should never expire but if need arises, follow the following steps to generate one:
  *
- * First call MoneyBird::generateRequestTokenURL(string[] scopes);
+ * First call MoneyBird::generateRequestTokenURL();
  * This will output a URL. Give this URL to a person with access to the MoneyBird administration you need the access
  * token for.
  *
- * They will get a screen where they can give access after logging in. After giving access they will see a request token.
+ * This person will get a screen where they can give permission after logging in. After giving permission they will see
+ * a request token which they will need to give this token back to you.
  *
- * With this request token you can get an access token by calling MoneyBird::generateAccessToken(string requestToken);
+ * With this request token you can get an access token by calling MoneyBird::generateAccessToken();
  * This will output the access en refresh tokens. Store these somewhere in your .env or config files and use them to
- * setup this class.
+ * construct this class.
  *
  */
 class MoneyBird extends RESTClient {
-
     /**
-     * @var MoneyBird   Stores the instance for singleton pattern
+     * @var string      The base URL for the API
      */
-    private static $instance;
+    protected $baseURL = 'https://moneybird.com/api/v2/';
 
     /**
      * @var string      The client id of the MoneyBird WebLab application
      */
-    protected static $clientID;
+    protected $clientID;
 
     /**
      * @var string      The client secret of the MoneyBird WebLab application
      */
-    protected static $clientSecret;
+    protected $clientSecret;
 
     /**
      * @var string      The redirect URI for authorization requests.
      */
-    protected static $authRedirectURI;
+    protected $authRedirectURI;
 
     /**
      * @var string      The id of the administration the calls are made to
      */
-    protected static $administrationID;
+    protected $administrationID;
 
     /**
      * @var string      The accessToken that will be used to make API calss
      */
-    protected static $accessToken;
+    protected $accessToken;
 
     /**
      * @var string      The refreshToken which you can use to get a new accessToken when one expires
      */
-    protected static $refreshToken;
+    protected $refreshToken;
 
     /**
      * @var string      The URL to which authorization requests must be made
@@ -71,12 +71,7 @@ class MoneyBird extends RESTClient {
     protected static $permissionURL = 'https://moneybird.com/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s';
 
     /**
-     * @var string      The base URL for the API
-     */
-    protected $baseURL = 'https://moneybird.com/api/v2/';
-
-    /**
-     * Setup the authorization for the MoneyBird API
+     * MoneyBird constructor.
      *
      * @param   string      $clientID           The id of your MoneyBird app
      * @param   string      $clientSecret       The secret of your MoneyBird app
@@ -85,41 +80,24 @@ class MoneyBird extends RESTClient {
      * @param   string|null $refreshToken       RefreshToken for the passed accessToken
      * @param   string      $authRedirectURI    URI where a user will be redirected to when giving access. (default value outputs into browser)
      */
-    public static function setup(string $clientID, string $clientSecret, int $administrationID, string $accessToken = null, string $refreshToken = null, string $authRedirectURI = 'urn:ietf:wg:oauth:2.0:oob') {
-        self::$clientID         = $clientID;
-        self::$clientSecret     = $clientSecret;
-        self::$administrationID = $administrationID;
-        self::$accessToken      = $accessToken;
-        self::$refreshToken     = $refreshToken;
-        self::$authRedirectURI  = $authRedirectURI;
-    }
-
-    /**
-     * MoneyBird constructor.
-     */
-    public function __construct() {
+    public function __construct(string $clientID, string $clientSecret, int $administrationID, string $accessToken = null, string $refreshToken = null, string $authRedirectURI = 'urn:ietf:wg:oauth:2.0:oob') {
         parent::__construct();
 
+        $this->clientID         = $clientID;
+        $this->clientSecret     = $clientSecret;
+        $this->administrationID = $administrationID;
+        $this->accessToken      = $accessToken;
+        $this->refreshToken     = $refreshToken;
+        $this->authRedirectURI  = $authRedirectURI;
+
         // Complete the base URL
-        $this->baseURL .= self::$administrationID . '/';
+        $this->baseURL .= $this->administrationID . '/';
 
         // Set the adapter that will handle all the requests
         $this->setAdapter($this->createAdapter());
 
         // Register a response handler for HTTP status too many requests
         $this->registerResponseHandler(429, 'tooManyRequestsHandler');
-    }
-
-    /**
-     * getInstance method for singleton pattern
-     *
-     * @return  MoneyBird
-     */
-    public static function getInstance() {
-        if (!isset(self::$instance)) {
-            self::$instance = new static();
-        }
-        return self::$instance;
     }
 
     /**
@@ -130,34 +108,39 @@ class MoneyBird extends RESTClient {
     protected function createAdapter() {
         return (new OAuth)
             ->setURL(self::$authURL)
-            ->setClientID(self::$clientID)
-            ->setSecret(self::$clientSecret)
-            ->setAccessToken(self::$accessToken)
-            ->setRefreshToken(self::$refreshToken)
-            ->setRedirectURI(self::$authRedirectURI);
+            ->setClientID($this->clientID)
+            ->setSecret($this->clientSecret)
+            ->setAccessToken($this->accessToken)
+            ->setRefreshToken($this->refreshToken)
+            ->setRedirectURI($this->authRedirectURI);
     }
 
     /**
      * Helper function for generating access tokens. See class comments above
      *
-     * @param   array   $scopes
+     * @param   string  $clientID           The id of your MoneyBird app
+     * @param   array   $scopes             Add additional permissions. See: https://developer.moneybird.com/authentication/#scopes
+     * @param   string  $authRedirectURI    URI where a user will be redirected to when giving access. (default value outputs into browser)
      */
-    public static function generateRequestTokenURL($scopes = []) {
+    public static function generateRequestTokenURL(string $clientID, $scopes = [], string $authRedirectURI = 'urn:ietf:wg:oauth:2.0:oob') {
         // substitute the variable parameters in the url
-        printf(self::$permissionURL . PHP_EOL, self::$clientID, self::$authRedirectURI, implode(' ', $scopes));
+        printf(self::$permissionURL . PHP_EOL, $clientID, $authRedirectURI, implode(' ', $scopes));
     }
 
     /**
      * Helper function for generating access tokens. See class comments above
      *
-     * @param   string  $token
+     * @param   string  $token              The request token in the response from generateRequestTokenURL()
+     * @param   string  $clientID           The id of your MoneyBird app
+     * @param   string  $clientSecret       The secret of your MoneyBird app
+     * @param   string  $authRedirectURI    URI where a user will be redirected to when giving access. (default value outputs into browser)
      */
-    public static function generateAccessToken($token) {
+    public static function generateAccessToken(string $token, string $clientID, string $clientSecret, string $authRedirectURI = 'urn:ietf:wg:oauth:2.0:oob') {
         $adapter = (new OAuth)
             ->setURL(self::$authURL)
-            ->setClientID(self::$clientID)
-            ->setSecret(self::$clientSecret)
-            ->setRedirectURI(self::$authRedirectURI);
+            ->setClientID($clientID)
+            ->setSecret($clientSecret)
+            ->setRedirectURI($authRedirectURI);
 
         // Request an access token
         $result = json_decode($adapter->processRequestToken($token)->getResult());
