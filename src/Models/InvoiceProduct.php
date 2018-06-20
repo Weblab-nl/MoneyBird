@@ -6,7 +6,9 @@ namespace Weblab\MoneyBird\Models;
  * Class Product
  * @author Weblab.nl - Eelco Verbeek
  */
-class Product extends AbstractModel {
+class InvoiceProduct {
+
+    use ModelTrait;
 
     // define the product mutable fields
     protected $mutable = [

@@ -2,47 +2,39 @@
 
 namespace Weblab\MoneyBird;
 
-use Prophecy\Argument;
-use Weblab\MoneyBird\Exceptions\TooManyRequestsException;
-use Weblab\CURL\Result;
+use Weblab\MoneyBird\Repositories\Factory;
+use Weblab\MoneyBird\Repositories\Invoices;
 use Weblab\MoneyBird\Tests\TestCase;
-use Weblab\RESTClient\Adapters\AdapterInterface;
 
 /**
- * Class MoneyBirdTest
+ * Class MoneyBird2Test
  * @author Weblab.nl - Eelco Verbeek
  */
 class MoneyBirdTest extends TestCase {
 
-    /**
-     * @runInSeparateProcess
-     */
-    public function testTooManyRequestsException() {
-        // make the blueprint of a result and set what it will return
-        $result = $this->prophesize(Result::class);
-        $result->getStatus()
-            ->shouldBeCalled()
-            ->willReturn(429);
+    /** @test */
+    public function access_repository() {
+        // Create a MoneyBird instance
+        $moneyBird = new MoneyBird('126abf', 'this is very secret', 126);
 
-        // make the blueprint of the adapter and set what it will return
-        $adapter = $this->prophesize(AdapterInterface::class);
-        $adapter->doRequest('get', Argument::containingString('/users/1'), Argument::cetera())
-            ->shouldBeCalled()
-            ->willReturn($result);
+        // Get a RepositoryFactory mock
+        $factory = $this->getMockBuilder(Factory::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-        // add the config alias to the mock-class
-        $config = \Mockery::mock('alias:' . '\Config');
-        $config
-            ->shouldReceive('get')
-            ->andReturns('config');
+        // Get a InvoicesRepository mock
+        $repository = $this->getMockBuilder(Invoices::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-        // initiate a new Moneybird object and set its adapter
-        $moneyBird = new MoneyBird('1a2b3c', 'this is a very secret secret',123456);
-        $moneyBird->setAdapter($adapter->reveal());
+        // Setup assertions
+        $factory->expects($this->once())->method('get')->with('invoices')->willReturn($repository);
 
-        // set the expectation of an exception and test it
-        $this->expectException(TooManyRequestsException::class);
-        $moneyBird->get('/users/1');
+        // Inject the factory into the MoneyBird class
+        $moneyBird->setRepositoryFactory($factory);
+
+        // Assert if the factory returns the repository
+        $this->assertEquals($repository, $moneyBird->invoices);
     }
 
 }

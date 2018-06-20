@@ -1,6 +1,7 @@
 <?php
 
 namespace Weblab\MoneyBird\Models;
+
 use Weblab\MoneyBird\Tests\TestCase;
 
 /**
@@ -10,9 +11,10 @@ use Weblab\MoneyBird\Tests\TestCase;
 class AbstractInvoiceTest extends TestCase {
 
     /**
+     * @test
      * @runInSeparateProcess
      */
-    public function testToArray() {
+    public function to_array() {
         // set the product entity
         $productEntity = [
             'id'    => 333,
@@ -20,7 +22,7 @@ class AbstractInvoiceTest extends TestCase {
         ];
 
         // get the mock product
-        $product = $this->getMockBuilder(Product::class)
+        $product = $this->getMockBuilder(InvoiceProduct::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -38,7 +40,7 @@ class AbstractInvoiceTest extends TestCase {
 
         // set the invoice mock object
         $invoice = $this->getMockBuilder(AbstractInvoice::class)
-            ->setConstructorArgs([(object) $entity])
+            ->setConstructorArgs([$this->getMoneyBirdMock(), (object) $entity])
             ->getMockForAbstractClass();
 
         // add a mock product tot the invoice
@@ -47,7 +49,7 @@ class AbstractInvoiceTest extends TestCase {
         // cast the invoice to an array
         $result = $invoice->toArray();
 
-        // set the Expected results and add the productEntity to it
+        // set the expected results and add the productEntity to it
         $expectedResult = $entity;
         $expectedResult['details_attributes'] = [$productEntity];
 
@@ -56,15 +58,17 @@ class AbstractInvoiceTest extends TestCase {
     }
 
     /**
+     * @test
      * @runInSeparateProcess
      */
-    public function testFillFromAPI() {
+    public function fill_from_api() {
         // set the product and entity array/object
         $product = [
             'id' => 333,
             'name' => 'product'
         ];
 
+        // set the invoice entity
         $entity = (object) [
             'id' => 666,
             'name' => 'test',
@@ -74,15 +78,15 @@ class AbstractInvoiceTest extends TestCase {
         ];
 
         // overwrite the product array and set it as Product mock
-        $product = \Mockery::mock('overload:' . Product::class);
+        $product = \Mockery::mock('overload:' . InvoiceProduct::class);
 
-
+        // Get a mock for AbstractInvoice
         $invoice = $this->getMockBuilder(AbstractInvoice::class)
-            ->setConstructorArgs([clone $entity, true])
+            ->setConstructorArgs([$this->getMoneyBirdMock(), clone $entity, true])
             ->getMockForAbstractClass();
 
         // set the expected Product and unset its details
-        $expectedProduct = new Product($product);
+        $expectedProduct = new InvoiceProduct($product);
         unset($entity->details);
         $expectedEntity = $entity;
 

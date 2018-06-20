@@ -2,6 +2,8 @@
 
 namespace Weblab\MoneyBird;
 
+use Weblab\MoneyBird\Repositories\AbstractRepository;
+use Weblab\MoneyBird\Repositories\Factory;
 use Weblab\MoneyBird\Exceptions\TooManyRequestsException;
 use Weblab\RESTClient\Adapters\OAuth;
 use Weblab\RESTClient\RESTClient;
@@ -25,6 +27,7 @@ use Weblab\RESTClient\RESTClient;
  *
  */
 class MoneyBird extends RESTClient {
+
     /**
      * @var string      The base URL for the API
      */
@@ -61,6 +64,11 @@ class MoneyBird extends RESTClient {
     protected $refreshToken;
 
     /**
+     * @var object      The factory that makes repositories
+     */
+    protected $repositoryFactory;
+
+        /**
      * @var string      The URL to which authorization requests must be made
      */
     protected static $authURL = 'https://moneybird.com/oauth/token';
@@ -98,6 +106,8 @@ class MoneyBird extends RESTClient {
 
         // Register a response handler for HTTP status too many requests
         $this->registerResponseHandler(429, 'tooManyRequestsHandler');
+
+        $this->setRepositoryFactory(new Factory($this));
     }
 
     /**
@@ -200,6 +210,25 @@ class MoneyBird extends RESTClient {
 
         // done, return the REST-update-call
         return parent::update($type, $url, $params, $options, $headers);
+    }
+
+    /**
+     * Set the repository factory
+     *
+     * @param   object  $factory
+     */
+    public function setRepositoryFactory($factory) {
+        $this->repositoryFactory = $factory;
+    }
+
+    /**
+     * Magic getter for accessing repositories through the repository factory
+     *
+     * @param   string              $name   The name of the repository
+     * @return  AbstractRepository
+     */
+    public function __get($name) {
+        return $this->repositoryFactory->get($name);
     }
 
 }

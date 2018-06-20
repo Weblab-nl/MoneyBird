@@ -1,13 +1,11 @@
 <?php
 
 namespace Weblab\MoneyBird\Models;
-
+use Weblab\CURL\Result;
 use Weblab\MoneyBird\Exceptions\EntityCreationException;
 use Weblab\MoneyBird\Exceptions\EntityDeleteException;
 use Weblab\MoneyBird\Exceptions\EntityUpdateException;
-use Weblab\MoneyBird\MoneyBird;
 use Weblab\MoneyBird\Tests\TestCase;
-use Weblab\CURL\Result;
 
 /**
  * Class AbstractModelTest
@@ -15,372 +13,276 @@ use Weblab\CURL\Result;
  */
 class AbstractModelTest extends TestCase {
 
-    public function testConstuctFromAPI() {
-        $entity = (object) [
-            'id'    => 1,
-            'name'  => 'test'
-        ];
-
-        $model = $this->getMockBuilder(AbstractModel::class)
-            ->setConstructorArgs([clone $entity, true])
-            ->getMockForAbstractClass();
-
-        $model->name = 'not test';
-
-        $this->assertAttributeEquals($entity, 'old', $model);
-        $this->assertAttributeNotEquals($entity, 'entity', $model);
-    }
-
-    public function testConstructWithMutableRestrictions() {
-        $entity = (object) [
-            'id'    => 1,
-            'name'  => 'test'
-        ];
-
-        $model = $this->getMockBuilder(AbstractModel::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['isMutable'])
-            ->getMockForAbstractClass();
-
-        $model
-            ->expects($this->exactly(2))
-            ->method('isMutable')
-            ->willReturnOnConsecutiveCalls([true, false]);
-
-        $reflectedClass = new \ReflectionClass(AbstractModel::class);
-        $constructor = $reflectedClass->getConstructor();
-        $constructor->invoke($model, clone $entity);
-
-        unset($entity->name);
-
-        $this->assertAttributeEquals($entity, 'entity', $model);
-    }
-
-    /**
-     * @runInSeparateProcess
-     */
-    public function testFindSuccess() {
+    /** @test */
+    public function findSuccess() {
+        // Get a mock for CURL\Result
         $moneyBirdResult = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $moneyBirdResult
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn(200);
-        $moneyBirdResult
-            ->expects($this->once())
-            ->method('getResult')
-            ->willReturn(new \stdClass());
 
+        // Set assertions
+        $moneyBirdResult->expects($this->once())->method('getStatus')->willReturn(200);
+        $moneyBirdResult->expects($this->once())->method('getResult')->willReturn(new \stdClass());
 
-        $moneyBird = \Mockery::mock('alias:' . '\Weblab\MoneyBird\MoneyBird');
-        $moneyBird
-            ->shouldReceive('getInstance')
-            ->andReturns($moneyBird);
-        $moneyBird
-            ->shouldReceive('get')
-            ->andReturns($moneyBirdResult);
+        // Get a MoneyBird mock
+        $moneyBird = $this->getMoneyBirdMock();
+        // Set assertions
+        $moneyBird->expects($this->once())->method('get')->willReturn($moneyBirdResult);
 
+        // Make instance of class that extend the AbstractModel
+        $model = new FakeFind($moneyBird);
 
-        $result = FakeFind::find(1);
+        // Run code
+        $result = $model->find(1);
+
+        // Assert if result is instance of FakeFind
         $this->assertInstanceOf(FakeFind::class, $result);
     }
 
-    /**
-     * @runInSeparateProcess
-     */
-    public function testFindFail() {
+    /** @test */
+    public function findFail() {
+        // Get a mock for CURL\Result
         $moneyBirdResult = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $moneyBirdResult
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn(404);
+        // Set assertions
+        $moneyBirdResult->expects($this->once())->method('getStatus')->willReturn(404);
 
+        // Get MoneyBird mock
+        $moneyBird = $this->getMoneyBirdMock();
+        // Set assertions
+        $moneyBird->expects($this->once())->method('get')->willReturn($moneyBirdResult);
 
-        $moneyBird = \Mockery::mock('alias:' . '\Weblab\MoneyBird\MoneyBird');
-        $moneyBird
-            ->shouldReceive('getInstance')
-            ->andReturns($moneyBird);
-        $moneyBird
-            ->shouldReceive('get')
-            ->andReturns($moneyBirdResult);
+        // Make instance of class that extends AbstractModel
+        $model = new FakeFind($moneyBird);
 
+        // Run code
+        $result = $model->find(1);
 
-        $result = FakeFind::find(1);
+        // Assert if the result was null
         $this->assertNull($result);
     }
 
-    public function testSaveNewEntitySuccess() {
+    /** @test */
+    public function saveNewEntitySuccess() {
+        // Make a test entity
         $entity = (object) ['name' => 'test'];
+        // Set saveType
         $saveType = 'post';
+        // Set the expected endpoint url
         $expectedURL = '/endpoint.json';
+        // Set CURL result status
         $resultStatus = 201;
 
+        // Set CURL result
         $responseResult = (object) [
             'id'    => 666,
             'name'  => 'test'
         ];
 
+        // Get CURL\Result mock
         $responseMock = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $responseMock
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn($resultStatus);
-        $responseMock
-            ->expects($this->once())
-            ->method('getResult')
-            ->willReturn($responseResult);
+        // Set assertions
+        $responseMock->expects($this->once())->method('getStatus')->willReturn($resultStatus);
+        $responseMock->expects($this->once())->method('getResult')->willReturn($responseResult);
 
+        // Get MoneyBird mock
+        $moneyBirdMock = $this->getMoneyBirdMock();
+        // Set assertions
+        $moneyBirdMock->expects($this->once())->method($saveType)->with($expectedURL, json_encode(['entity' => $entity]), [], [])->willReturn($responseMock);
 
-        $moneyBirdMock = $this->getMockBuilder(MoneyBird::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $moneyBirdMock
-            ->expects($this->once())
-            ->method($saveType)
-            ->with($expectedURL, json_encode(['entity' => $entity]), [], [])
-            ->willReturn($responseMock);
+        // Make instance of class that extends AbstractModel
+        $model = new FakeFind($moneyBirdMock, $entity);
 
-
-        $model = $this->getMockBuilder(FakeFind::class)
-            ->setConstructorArgs([$entity])
-            ->setMethods(['connection'])
-            ->getMockForAbstractClass();
-        $model
-            ->expects($this->once())
-            ->method('connection')
-            ->willReturn($moneyBirdMock);
-
+        // Run code
         $result = $model->save();
 
+        // Validate if result was true
         $this->assertTrue($result);
     }
 
-    public function testSaveUpdateEntitySuccess() {
+    /** @test */
+    public function saveUpdateEntitySuccess() {
+        // Set test entity
         $entity = (object) [
             'id'    => 666,
             'name'  => 'test'
         ];
 
+        // Set expected entity
         $expectedEntity = (object) [
             'name'  => 'not test anymore',
             'id'    => 666
         ];
 
+        // Set the expected save method name
         $saveType = 'patch';
+        // Set the expected endpoint url
         $expectedURL = '/endpoint/666.json';
+        // Set the CURL\Result http status
         $resultStatus = 200;
 
+        // Set the CURL\Result data
         $responseResult = (object) [
             'id'    => 666,
             'name'  => 'not test anymore'
         ];
 
+        // Get a CURL\Result mock
         $responseMock = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $responseMock
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn($resultStatus);
-        $responseMock
-            ->expects($this->once())
-            ->method('getResult')
-            ->willReturn($responseResult);
+        // Set assertions
+        $responseMock->expects($this->once())->method('getStatus')->willReturn($resultStatus);
+        $responseMock->expects($this->once())->method('getResult')->willReturn($responseResult);
 
+        // Get MoneyBird mock
+        $moneyBirdMock = $this->getMoneyBirdMock();
+        // Set assertions
+        $moneyBirdMock->expects($this->once())->method($saveType)->with($expectedURL, json_encode(['entity' => $expectedEntity]), [], [])->willReturn($responseMock);
 
-        $moneyBirdMock = $this->getMockBuilder(MoneyBird::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $moneyBirdMock
-            ->expects($this->once())
-            ->method($saveType)
-            ->with($expectedURL, json_encode(['entity' => $expectedEntity]), [], [])
-            ->willReturn($responseMock);
+        // Make instance of class that extends AbstractModel
+        $model = new FakeFind($moneyBirdMock, $entity, true);
 
-
-        $model = $this->getMockBuilder(FakeFind::class)
-            ->setConstructorArgs([$entity, true])
-            ->setMethods(['connection'])
-            ->getMockForAbstractClass();
-        $model
-            ->expects($this->once())
-            ->method('connection')
-            ->willReturn($moneyBirdMock);
-
+        // Change the value of a property
         $model->name = 'not test anymore';
 
+        // Run the code
         $result = $model->save();
 
+        // Assert if result is true
         $this->assertTrue($result);
     }
 
-    public function testSaveCreateNewEntityFail() {
+    /** @test */
+    public function saveCreateNewEntityFail() {
+        // Get CURL\Result mock
         $responseMock = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $responseMock
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn(400);
+        // Set assertions
+        $responseMock->expects($this->once())->method('getStatus')->willReturn(400);
 
-
+        // Set test entity
         $entity = (object) [
             'name'  => 'test'
         ];
 
-        $moneyBirdMock = $this->getMockBuilder(MoneyBird::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $moneyBirdMock
-            ->expects($this->once())
-            ->method('post')
-            ->with('/endpoint.json', json_encode(['entity' => $entity]), [], [])
-            ->willReturn($responseMock);
+        // Get MoneyBird mock
+        $moneyBirdMock = $this->getMoneyBirdMock();
+        // Set assertions
+        $moneyBirdMock->expects($this->once())->method('post')->with('/endpoint.json', json_encode(['entity' => $entity]), [], [])->willReturn($responseMock);
 
+        // Make instance of class that extends AbstractModel
+        $model = new FakeFind($moneyBirdMock, $entity);
 
-        $model = $this->getMockBuilder(FakeFind::class)
-            ->setConstructorArgs([$entity])
-            ->setMethods(['connection'])
-            ->getMockForAbstractClass();
-        $model
-            ->expects($this->once())
-            ->method('connection')
-            ->willReturn($moneyBirdMock);
-
+        // Expect an Exception to be thrown
         $this->expectException(EntityCreationException::class);
 
+        // Run code
         $model->save();
     }
 
-    public function testSaveUpdateEntityFail() {
+    /** @test */
+    public function saveUpdateEntityFail() {
+        // Get CURL\Result mock
         $responseMock = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $responseMock
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn(400);
+        // Set assertions
+        $responseMock->expects($this->once())->method('getStatus')->willReturn(400);
 
-
+        // Set test entity
         $entity = (object) [
             'id'    => 666,
             'name'  => 'test'
         ];
 
+        // Set expected entity
         $expectedEntity = (object) [
             'name'  => 'not test anymore',
             'id'    => 666
         ];
 
-        $moneyBirdMock = $this->getMockBuilder(MoneyBird::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $moneyBirdMock
-            ->expects($this->once())
-            ->method('patch')
-            ->with('/endpoint/666.json', json_encode(['entity' => $expectedEntity]), [], [])
-            ->willReturn($responseMock);
+        // Get MoneyBird mock
+        $moneyBirdMock = $this->getMoneyBirdMock();
+        // Set assertions
+        $moneyBirdMock->expects($this->once())->method('patch')->with('/endpoint/666.json', json_encode(['entity' => $expectedEntity]), [], [])->willReturn($responseMock);
 
+        // Make instance of class that extends AbstractModel
+        $model = new FakeFind($moneyBirdMock, $entity, true);
 
-        $model = $this->getMockBuilder(FakeFind::class)
-            ->setConstructorArgs([$entity, true])
-            ->setMethods(['connection'])
-            ->getMockForAbstractClass();
-        $model
-            ->expects($this->once())
-            ->method('connection')
-            ->willReturn($moneyBirdMock);
-
+        // Expect an Exception to be thrown
         $this->expectException(EntityUpdateException::class);
 
+        // Change property
         $model->name = 'not test anymore';
 
+        // Run code
         $model->save(true);
     }
 
-    public function testDeleteSuccess() {
+    /** @test */
+    public function deleteSuccess() {
+        // Set test entity
         $entity = (object) [
             'id'    => 666,
             'name'  => 'test'
         ];
 
+        // Get CURL\Result mock
         $responseMock = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $responseMock
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn(204);
+        // Set assertions
+        $responseMock->expects($this->once())->method('getStatus')->willReturn(204);
 
+        // Get MoneyBird mock
+        $moneyBirdMock = $this->getMoneyBirdMock();
+        // Set assertions
+        $moneyBirdMock->expects($this->once())->method('delete')->with('/endpoint/666.json', [], [], [])->willReturn($responseMock);
 
-        $moneyBirdMock = $this->getMockBuilder(MoneyBird::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $moneyBirdMock
-            ->expects($this->once())
-            ->method('delete')
-            ->with('/endpoint/666.json', [], [], [])
-            ->willReturn($responseMock);
+        // Make instance of class that extends AbstractModel
+        $model = new FakeFind($moneyBirdMock, $entity);
 
-
-        $model = $this->getMockBuilder(FakeFind::class)
-            ->setConstructorArgs([$entity])
-            ->setMethods(['connection'])
-            ->getMockForAbstractClass();
-        $model
-            ->expects($this->once())
-            ->method('connection')
-            ->willReturn($moneyBirdMock);
-
+        // Run code
         $result = $model->delete();
 
+        // Assert if result is true
         $this->assertTrue($result);
     }
 
-    public function testDeleteFailure() {
+    /** @test */
+    public function deleteFailure() {
+        // Set test entity
         $entity = (object) [
             'id'    => 666,
             'name'  => 'test'
         ];
 
+        // Get CURL\Result mock
         $responseMock = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $responseMock
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn(404);
+        // Set assertions
+        $responseMock->expects($this->once())->method('getStatus')->willReturn(404);
 
+        // Get MoneyBird mock
+        $moneyBirdMock = $this->getMoneyBirdMock();
+        // Set assertions
+        $moneyBirdMock->expects($this->once())->method('delete')->with('/endpoint/666.json', [], [], [])->willReturn($responseMock);
 
-        $moneyBirdMock = $this->getMockBuilder(MoneyBird::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $moneyBirdMock
-            ->expects($this->once())
-            ->method('delete')
-            ->with('/endpoint/666.json', [], [], [])
-            ->willReturn($responseMock);
+        // Make instance of class that extends AbstractModel
+        $model = new FakeFind($moneyBirdMock, $entity);
 
-
-        $model = $this->getMockBuilder(FakeFind::class)
-            ->setConstructorArgs([$entity])
-            ->setMethods(['connection'])
-            ->getMockForAbstractClass();
-        $model
-            ->expects($this->once())
-            ->method('connection')
-            ->willReturn($moneyBirdMock);
-
+        // Expect an Exceptions to be thrown
         $this->expectException(EntityDeleteException::class);
+
+        // Run code
         $model->delete();
     }
-
-
 
 }
 
