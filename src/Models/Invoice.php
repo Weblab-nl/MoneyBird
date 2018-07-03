@@ -19,4 +19,34 @@ class Invoice extends AbstractInvoice {
         'payment_conditions', 'discount'
     ];
 
+    /**
+     * Register a payment done for the invoice
+     *
+     * @param   Payment     $payment
+     * @return  mixed
+     * @throws  \Exception
+     */
+    public function addPayment(Payment $payment) {
+        // Setup the path
+        $path = static::ENDPOINT . '/' . $this->id . '/' . $payment::ENDPOINT;
+
+        // Do the API call
+        return $this->api->post($path, $payment->toJSON());
+    }
+
+    /**
+     * Send the invoice to the customer
+     *
+     * @param   SendSettings    $sendInvoice
+     * @return  mixed
+     * @throws  \Exception
+     */
+    public function send(SendSettings $sendInvoice) {
+        // Setup the path
+        $path = static::ENDPOINT . '/' . $this->id . '/' . $sendInvoice::ENDPOINT;
+
+        // Do the API call
+        return $this->api->patch($path, $sendInvoice->toJSON());
+    }
+
 }
