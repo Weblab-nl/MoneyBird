@@ -174,6 +174,27 @@ class MoneyBird extends RESTClient {
     }
 
     /**
+     * Do a GET request to the API
+     *
+     * @param   string  $url
+     * @param   array   $params
+     * @param   array   $options
+     * @param   array   $headers
+     * @return  mixed
+     * @throws  \Exception
+     */
+    public function get($url, $params = [], $options = [], $headers = []) {
+        // Append the url with .json
+        $url .= '.json';
+
+        // Set content = json header
+        $headers['Content-Type'] = 'application/json';
+
+        // Done, return the REST-get-call
+        return parent::get($url, $params, $options, $headers);
+    }
+
+    /**
      * Do a POST request to the API
      *
      * @param   string      $url
@@ -184,16 +205,19 @@ class MoneyBird extends RESTClient {
      * @throws  \Exception
      */
     public function post($url, $params, $options = [], $headers = []) {
+        // Append the url with .json
+        $url .= '.json';
+
         // Add JSON headers
         $headers['Content-Type']    = 'application/json';
         $headers['Content-Length']  = strlen($params);
 
-        // done, return the REST-post call
+        // Done, return the REST-post-call
         return parent::post($url, $params, $options, $headers);
     }
 
     /**
-     * Do a update request to the API
+     * Do a UPDATE request to the API
      *
      * @param   string      $type
      * @param   string      $url
@@ -204,12 +228,36 @@ class MoneyBird extends RESTClient {
      * @throws  \Exception
      */
     public function update($type, $url, $params, $options = [], $headers = []) {
+        // Append the url with .json
+        $url .= '.json';
+
         // Add JSON headers
         $headers['Content-Type']    = 'application/json';
         $headers['Content-Length']  = strlen($params);
 
-        // done, return the REST-update-call
+        // Done, return the REST-update-call
         return parent::update($type, $url, $params, $options, $headers);
+    }
+
+    /**
+     * Do a DELETE to the API
+     *
+     * @param   string  $url
+     * @param   array   $params
+     * @param   array   $options
+     * @param   array   $headers
+     * @return  mixed
+     * @throws  \Exception
+     */
+    public function delete($url, $params = [], $options = [], $headers = []) {
+        // Append the url with .json
+        $url .= '.json';
+
+        // Set content = json header
+        $headers['Content-Type'] = 'application/json';
+
+        // Done, return the REST-delete-call
+        return parent::delete($url, $params, $options, $headers);
     }
 
     /**

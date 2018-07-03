@@ -70,7 +70,7 @@ class AbstractModelTest extends TestCase {
         // Set saveType
         $saveType = 'post';
         // Set the expected endpoint url
-        $expectedURL = '/endpoint.json';
+        $expectedURL = '/endpoint';
         // Set CURL result status
         $resultStatus = 201;
 
@@ -120,7 +120,7 @@ class AbstractModelTest extends TestCase {
         // Set the expected save method name
         $saveType = 'patch';
         // Set the expected endpoint url
-        $expectedURL = '/endpoint/666.json';
+        $expectedURL = '/endpoint/666';
         // Set the CURL\Result http status
         $resultStatus = 200;
 
@@ -173,7 +173,7 @@ class AbstractModelTest extends TestCase {
         // Get MoneyBird mock
         $moneyBirdMock = $this->getMoneyBirdMock();
         // Set assertions
-        $moneyBirdMock->expects($this->once())->method('post')->with('/endpoint.json', json_encode(['entity' => $entity]), [], [])->willReturn($responseMock);
+        $moneyBirdMock->expects($this->once())->method('post')->with('/endpoint', json_encode(['entity' => $entity]), [], [])->willReturn($responseMock);
 
         // Make instance of class that extends AbstractModel
         $model = new FakeFind($moneyBirdMock, $entity);
@@ -209,7 +209,7 @@ class AbstractModelTest extends TestCase {
         // Get MoneyBird mock
         $moneyBirdMock = $this->getMoneyBirdMock();
         // Set assertions
-        $moneyBirdMock->expects($this->once())->method('patch')->with('/endpoint/666.json', json_encode(['entity' => $expectedEntity]), [], [])->willReturn($responseMock);
+        $moneyBirdMock->expects($this->once())->method('patch')->with('/endpoint/666', json_encode(['entity' => $expectedEntity]), [], [])->willReturn($responseMock);
 
         // Make instance of class that extends AbstractModel
         $model = new FakeFind($moneyBirdMock, $entity, true);
@@ -242,7 +242,7 @@ class AbstractModelTest extends TestCase {
         // Get MoneyBird mock
         $moneyBirdMock = $this->getMoneyBirdMock();
         // Set assertions
-        $moneyBirdMock->expects($this->once())->method('delete')->with('/endpoint/666.json', [], [], [])->willReturn($responseMock);
+        $moneyBirdMock->expects($this->once())->method('delete')->with('/endpoint/666', [], [], [])->willReturn($responseMock);
 
         // Make instance of class that extends AbstractModel
         $model = new FakeFind($moneyBirdMock, $entity);
@@ -272,7 +272,7 @@ class AbstractModelTest extends TestCase {
         // Get MoneyBird mock
         $moneyBirdMock = $this->getMoneyBirdMock();
         // Set assertions
-        $moneyBirdMock->expects($this->once())->method('delete')->with('/endpoint/666.json', [], [], [])->willReturn($responseMock);
+        $moneyBirdMock->expects($this->once())->method('delete')->with('/endpoint/666', [], [], [])->willReturn($responseMock);
 
         // Make instance of class that extends AbstractModel
         $model = new FakeFind($moneyBirdMock, $entity);

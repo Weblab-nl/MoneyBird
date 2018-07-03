@@ -40,7 +40,7 @@ abstract class AbstractModel {
      */
     public function find($id) {
         // Build path
-        $path = '/' . static::ENDPOINT . '/' . $id . '.json';
+        $path = '/' . static::ENDPOINT . '/' . $id;
 
         // Do API call
         $result = $this->api->get($path);
@@ -101,7 +101,7 @@ abstract class AbstractModel {
         }
 
         // Create the path
-        $path = '/' . static::ENDPOINT . '/' . $this->entity->id . '.json';
+        $path = '/' . static::ENDPOINT . '/' . $this->entity->id;
 
         // Do API call
         $result = $this->api->delete($path);
@@ -133,7 +133,7 @@ abstract class AbstractModel {
             $path .= '/' . $this->entity->id;
         }
 
-        return $path . '.json';
+        return $path;
     }
 
     /**
