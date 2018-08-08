@@ -19,7 +19,7 @@ class Factory {
      * @var array       Names of the available repositories
      */
     protected $availableRepositories = [
-        'invoices'
+        'invoices', 'contacts'
     ];
 
     /**
