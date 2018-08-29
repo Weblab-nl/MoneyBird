@@ -124,6 +124,10 @@ trait ModelTrait {
             $data['id'] = $this->entity->id;
         }
 
+        if (empty($data)) {
+            $data = (object) $data;
+        }
+
         return $data;
     }
 
