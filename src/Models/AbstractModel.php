@@ -28,12 +28,12 @@ abstract class AbstractModel {
      * @param   \stdClass|null  $entity
      * @param   bool            $fillFromAPI
      *
-     * @throws EntityCreationException
+     * @throws \Exception
      */
     public function __construct(MoneyBird $api, \stdClass $entity = null, $fillFromAPI = false) {
         // check if the endpoint constant is set
         if (!defined('ENDPOINT')) {
-            throw new EntityCreationException('Endpoint is missing');
+            throw new \Exception('Endpoint is missing');
         }
         
         $this->api = $api;
