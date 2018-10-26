@@ -35,7 +35,7 @@ abstract class AbstractModel {
         if (!defined('ENDPOINT')) {
             throw new EntityCreationException('Endpoint is missing');
         }
-        
+
         $this->api = $api;
         $this->traitConstruct($entity, $fillFromAPI);
     }
@@ -98,13 +98,12 @@ abstract class AbstractModel {
      *
      * @return  bool
      * @throws  EntityDeleteException
-     * @throws  MissingExternalIdentifierException
      * @throws  \Exception
      */
     public function delete() {
         // We need an id to delete the entity
         if (!isset($this->entity->id)) {
-            throw new MissingExternalIdentifierException();
+            throw new \Exception();
         }
 
         // Create the path
