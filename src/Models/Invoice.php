@@ -72,4 +72,21 @@ class Invoice extends AbstractInvoice {
         return $this->api->patch($path, $sendInvoice->toJSON());
     }
 
+    /**
+     * Add a note to the invoice
+     *
+     * @param   Note    $note
+     *
+     * @return  mixed
+     *
+     * @throws  \Exception
+     */
+    public function addNote(Note $note) {
+        // Setup the path
+        $path = static::ENDPOINT . '/' . $this->id . '/' . $note::ENDPOINT;
+
+        // Do the API call
+        return $this->api->post($path, $note->toJSON());
+    }
+
 }

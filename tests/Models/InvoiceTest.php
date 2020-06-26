@@ -102,4 +102,21 @@ class InvoiceTest extends TestCase {
         $invoice->deletePayments();
     }
 
+    /** @test */
+    public function addNote() {
+        $expectedPath   = 'sales_invoices/6/notes';
+        $expectedParam  = json_encode(['note' => ['note' => 'test']]);
+
+        $note = $this->getMockBuilder(Note::class)->setConstructorArgs([(object) ['note' => 'test']])->getMock();
+        $note->expects($this->once())->method('toJSON')->with()->willReturn($expectedParam);
+
+
+        $api = $this->getMockBuilder(MoneyBird::class)->disableOriginalConstructor()->getMock();
+        $api->expects($this->once())->method('post')->with($expectedPath, $expectedParam)->willReturn(true);
+
+        $invoice = new Invoice($api, (object) ['id' => 6, 'details' => []], true);
+
+        $invoice->addNote($note);
+    }
+
 }
