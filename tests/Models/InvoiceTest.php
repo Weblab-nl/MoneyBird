@@ -27,7 +27,7 @@ class InvoiceTest extends TestCase {
 
         $invoice->addPayment($payment);
     }
-    
+
     /** @test */
     public function send() {
         $expectedPath   = 'sales_invoices/6/send_invoice';
@@ -44,5 +44,79 @@ class InvoiceTest extends TestCase {
 
         $invoice->send($sendSettings);
     }
-    
+
+    /** @test */
+    public function delete_payments() {
+        $expectedGetPath = 'sales_invoices/66/payments';
+        $expectedDeletePath = 'sales_invoices/66/payments/666';
+
+        $payment = new \stdClass();
+        $payment->id = 666;
+
+        $payments = [$payment];
+
+        $getResult = $this->getMockBuilder(\Weblab\CURL\Result::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getStatus', 'getResult'])
+            ->getMock();
+
+        $getResult
+            ->expects($this->once())
+            ->method('getStatus')
+            ->willReturn(200);
+
+        $getResult
+            ->expects($this->once())
+            ->method('getResult')
+            ->willReturn($payments);
+
+        $deleteResult = $this->getMockBuilder(\Weblab\CURL\Result::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getStatus'])
+            ->getMock();
+
+        $deleteResult
+            ->expects($this->once())
+            ->method('getStatus')
+            ->willReturn(204);
+
+        $api = $this->getMockBuilder(MoneyBird::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $api
+            ->expects($this->once())
+            ->method('get')
+            ->with($expectedGetPath)
+            ->willReturn($getResult);
+
+        $api
+            ->expects($this->once())
+            ->method('delete')
+            ->with($expectedDeletePath)
+            ->willReturn($deleteResult);
+
+        $api->payments = new \Weblab\MoneyBird\Repositories\Payments($api);
+
+        $invoice = new Invoice($api, (object) ['id' => 66, 'details' => []], true);
+        $invoice->deletePayments();
+    }
+
+    /** @test */
+    public function addNote() {
+        $expectedPath   = 'sales_invoices/6/notes';
+        $expectedParam  = json_encode(['note' => ['note' => 'test']]);
+
+        $note = $this->getMockBuilder(Note::class)->setConstructorArgs([(object) ['note' => 'test']])->getMock();
+        $note->expects($this->once())->method('toJSON')->with()->willReturn($expectedParam);
+
+
+        $api = $this->getMockBuilder(MoneyBird::class)->disableOriginalConstructor()->getMock();
+        $api->expects($this->once())->method('post')->with($expectedPath, $expectedParam)->willReturn(true);
+
+        $invoice = new Invoice($api, (object) ['id' => 6, 'details' => []], true);
+
+        $invoice->addNote($note);
+    }
+
 }

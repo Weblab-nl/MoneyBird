@@ -35,6 +35,29 @@ class Invoice extends AbstractInvoice {
     }
 
     /**
+     * Delete payments linked to the invoice
+     *
+     * @return mixed
+     * @throws \Exception
+     */
+    public function deletePayments() {
+        $payments = $this->api->payments->getPaymentsForInvoice($this);
+
+        foreach ($payments as $payment) {
+            // Setup the path
+            $path = static::ENDPOINT . '/' . $this->id . '/' . $payment::ENDPOINT . '/' . $payment->id;
+
+            // Do the API call
+            $result = $this->api->delete($path);
+
+            // Throw exception for a unexpected HTTP status code
+            if ($result->getStatus() !== 204) {
+                throw new EntityDeleteException();
+            }
+        }
+    }
+
+    /**
      * Send the invoice to the customer
      *
      * @param   SendSettings    $sendInvoice
@@ -47,6 +70,23 @@ class Invoice extends AbstractInvoice {
 
         // Do the API call
         return $this->api->patch($path, $sendInvoice->toJSON());
+    }
+
+    /**
+     * Add a note to the invoice
+     *
+     * @param   Note    $note
+     *
+     * @return  mixed
+     *
+     * @throws  \Exception
+     */
+    public function addNote(Note $note) {
+        // Setup the path
+        $path = static::ENDPOINT . '/' . $this->id . '/' . $note::ENDPOINT;
+
+        // Do the API call
+        return $this->api->post($path, $note->toJSON());
     }
 
 }
