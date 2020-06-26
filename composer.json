@@ -1,6 +1,5 @@
 {
   "name": "weblabnl/moneybird",
-  "version": "1.3.1",
   "license": "Apache-2.0",
   "require": {
     "weblabnl/restclient": "~1.0"
