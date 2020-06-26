@@ -25,17 +25,11 @@ abstract class AbstractModel {
 
     /**
      * AbstractModel constructor.
+     * @param   MoneyBird       $api
      * @param   \stdClass|null  $entity
      * @param   bool            $fillFromAPI
-     *
-     * @throws \Exception
      */
     public function __construct(MoneyBird $api, \stdClass $entity = null, $fillFromAPI = false) {
-        // check if the endpoint constant is set
-        if (!defined('ENDPOINT')) {
-            throw new \Exception('Endpoint is missing');
-        }
-        
         $this->api = $api;
         $this->traitConstruct($entity, $fillFromAPI);
     }

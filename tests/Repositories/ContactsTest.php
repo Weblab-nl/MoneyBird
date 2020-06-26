@@ -2,7 +2,7 @@
 
 namespace Weblab\MoneyBird\Repositories;
 
-use Weblab\CURL\Request;
+use Weblab\CURL\Result;
 use Weblab\MoneyBird\Models\Contact;
 use Weblab\MoneyBird\MoneyBird;
 use Weblab\MoneyBird\Tests\TestCase;
@@ -15,7 +15,7 @@ class ContactsTest extends TestCase {
 
     /** @test */
     public function searchContactSuccess() {
-        $apiResult = $this->getMockBuilder(Request::class)
+        $apiResult = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->setMethods(['getStatus', 'getResult'])
             ->getMock();
@@ -57,7 +57,7 @@ class ContactsTest extends TestCase {
 
     /** @test */
     public function searchContactFailure() {
-        $apiResult = $this->getMockBuilder(Request::class)
+        $apiResult = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->setMethods(['getStatus'])
             ->getMock();
@@ -88,7 +88,7 @@ class ContactsTest extends TestCase {
 
     /** @test */
     public function searchContactNoResults() {
-        $apiResult = $this->getMockBuilder(Request::class)
+        $apiResult = $this->getMockBuilder(Result::class)
             ->disableOriginalConstructor()
             ->setMethods(['getStatus', 'getResult'])
             ->getMock();
@@ -120,5 +120,5 @@ class ContactsTest extends TestCase {
         $this->assertInternalType('array', $result);
         $this->assertEmpty($result);
     }
-    
+
 }
