@@ -16,7 +16,7 @@ class Invoice extends AbstractInvoice {
     protected $mutable = [
         'contact_id', 'original_estimate_id', 'document_style_id', 'workflow_id', 'reference', 'invoice_sequence_id',
         'remove_invoice_sequence_id', 'invoice_date', 'first_due_interval', 'currency', 'prices_are_incl_tax',
-        'payment_conditions', 'discount'
+        'payment_conditions', 'discount', 'payments'
     ];
 
     /**
@@ -41,11 +41,9 @@ class Invoice extends AbstractInvoice {
      * @throws \Exception
      */
     public function deletePayments() {
-        $payments = $this->api->payments->getPaymentsForInvoice($this);
-
-        foreach ($payments as $payment) {
+        foreach ($this->payments as $payment) {
             // Setup the path
-            $path = static::ENDPOINT . '/' . $this->id . '/' . $payment::ENDPOINT . '/' . $payment->id;
+            $path = static::ENDPOINT . '/' . $this->id . '/payments/' . $payment->id;
 
             // Do the API call
             $result = $this->api->delete($path);
